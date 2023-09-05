@@ -5,8 +5,8 @@ import Layout from "../Layout";
 import { dateFormatter } from "../helpers";
 
 const query = `*[_type == "poll"]{
-  slug,
   djSetDate,
+  _id
 }`;
 
 export default function Home() {
@@ -39,8 +39,8 @@ export default function Home() {
         <h2 className="text-xl font-medium">
           {futureEvents.length > 1 ? "Next polls" : "Next poll"}
         </h2>
-        {futureEvents.map((item) => (
-          <a href={`/polls/${item.slug.current}`}>
+        {futureEvents.map((item, i) => (
+          <a href={`/polls/${item._id}`} key={i}>
             {dateFormatter(new Date(item?.djSetDate))}
           </a>
         ))}
@@ -50,7 +50,7 @@ export default function Home() {
         <ul className="italic">
           {previousEvents.map((item, i) => (
             <li key={i}>
-              <a href={`/polls/${item.slug.current}`}>
+              <a href={`/polls/${item._id}`}>
                 {dateFormatter(new Date(item?.djSetDate))}
               </a>
             </li>
