@@ -1,4 +1,5 @@
 export type PollItem = {
+  _id: string;
   slug: {
     current: string;
     _type: "slug";
