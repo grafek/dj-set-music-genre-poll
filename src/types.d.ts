@@ -6,11 +6,11 @@ export type PollItem = {
   };
   djSetDate: string;
   pollOptions: {
-    options: PollOptions[];
+    options: PollOption[];
   };
 };
 
-export type PollOptions = {
+export type PollOption = {
   option: string;
   votes: number;
   _key: string;
