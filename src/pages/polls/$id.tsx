@@ -1,10 +1,11 @@
 import { useParams } from "react-router-dom";
 import Layout from "../../Layout";
 import type { PollItem, PollOption } from "../../types";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import sanityClient from "../../sanityClient";
 import { dateFormatter } from "../../helpers";
 import { toast } from "react-hot-toast";
+import { useOnClickOutside } from "../../hooks/useOnClickOutside";
 
 const PollItemPage = () => {
   const { id } = useParams();
@@ -65,19 +66,26 @@ const sanityApiMutateURL = `https://${
 }.api.sanity.io/v2021-06-07/data/mutate/${import.meta.env.VITE_SANITY_DATASET}`;
 
 const OptionsList = ({ options, isExpired, id }: OptionsListProps) => {
-  const [selectedOption, setSelectedOption] = useState<PollOption>();
+  const [selectedOption, setSelectedOption] = useState<PollOption | null>();
   const [hasVoted, setHasVoted] = useState(false);
   const [voteCounts, setVoteCounts] = useState<{ [key: string]: number }>({});
   const [alreadyVotedOption, setAlreadyVotedOption] = useState<string>();
+  const tooltipRef = useRef(null);
+  const [isTooltipVisisble, setIsTooltipVisible] = useState(false);
+
+  useOnClickOutside(tooltipRef, () => {
+    setIsTooltipVisible(false);
+    setSelectedOption(null);
+  });
 
   useEffect(() => {
-    const hasVotedLocal = localStorage.getItem("hasVoted");
-    const votedOptionLocal = localStorage.getItem("option");
+    const hasVotedLocal = localStorage.getItem(`${id}-has-voted`);
+    const votedOptionLocal = localStorage.getItem(`${id}-option`);
     if (hasVotedLocal === "true" && votedOptionLocal?.length) {
       setAlreadyVotedOption(votedOptionLocal);
       setHasVoted(true);
     }
-  }, []);
+  }, [id]);
 
   useEffect(() => {
     const initialCounts: { [key: string]: number } = {};
@@ -121,7 +129,7 @@ const OptionsList = ({ options, isExpired, id }: OptionsListProps) => {
   }, [id, options, selectedOption?.option, selectedOption?.votes]);
 
   useEffect(() => {
-    if (selectedOption && !hasVoted) {
+    if (selectedOption && !hasVoted && !isTooltipVisisble) {
       setVoteCounts((prevVoteCounts) => {
         return {
           ...prevVoteCounts,
@@ -129,10 +137,10 @@ const OptionsList = ({ options, isExpired, id }: OptionsListProps) => {
         };
       });
 
-      localStorage.setItem("hasVoted", "true");
-      localStorage.setItem("option", selectedOption?.option);
+      localStorage.setItem(`${id}-has-voted`, "true");
+      localStorage.setItem(`${id}-option`, selectedOption?.option);
       setHasVoted(true);
-      setAlreadyVotedOption(selectedOption.option)
+      setAlreadyVotedOption(selectedOption.option);
 
       toast.success(`Voted for ${selectedOption.option}`);
 
@@ -149,7 +157,7 @@ const OptionsList = ({ options, isExpired, id }: OptionsListProps) => {
         }
       });
     }
-  }, [hasVoted, selectedOption, sendVote]);
+  }, [hasVoted, id, isTooltipVisisble, selectedOption, sendVote]);
 
   return (
     <>
@@ -157,42 +165,85 @@ const OptionsList = ({ options, isExpired, id }: OptionsListProps) => {
         <span className="inline-block pb-2 text-sm w-full italic">
           You already voted for {alreadyVotedOption}
         </span>
-      ) : null}{" "}
-      <ul className="flex flex-col gap-2">
+      ) : null}
+      <ul className="flex flex-col gap-4 relative">
         {options.map((option) => (
-          <li
-            key={option._key}
-            onClick={() => {
-              if (isExpired || hasVoted) return;
-              setSelectedOption(option);
-            }}
-            className={`p-4 border border-neutral-600 rounded-md flex flex-col gap-4 cursor-pointer ${
+          <div
+            className={`border relative border-neutral-600 rounded-md cursor-pointer ${
               isExpired || hasVoted ? "hover:cursor-not-allowed" : ""
             }`}
           >
-            <div className="flex justify-between">
-              <div className="flex gap-2">
-                <input
-                  type="radio"
-                  className={`${isExpired ? "hover:cursor-not-allowed" : ""}`}
-                  checked={selectedOption === option}
-                  disabled={isExpired}
-                  onChange={() => {}}
-                  value={option.option}
-                />
-                {option.option}
-              </div>
-              <span>{voteCounts[option.option]}</span>
-            </div>
-            <div className="w-full relative h-[6px] rounded-md bg-neutral-600">
+            {selectedOption === option && isTooltipVisisble ? (
               <div
-                style={{
-                  width: `${(option.votes / (totalVotes || 0)) * 100}%`,
-                }}
-                className="h-[6px] rounded-md bg-indigo-700 absolute inset-0"
-              ></div>
-            </div>
-          </li>
+                ref={tooltipRef}
+                className={`bottom-20 gap-4 z-[9999] flex flex-col absolute rounded bg-gray-700 shadow-2xl p-2 text-xs`}
+              >
+                <span>
+                  You're about to vote on{" "}
+                  <span className="px-1 bg-gray-600 font-medium">
+                    {selectedOption.option}
+                  </span>
+                </span>
+                <div className="flex items-center justify-between">
+                  <button
+                    className="px-2 py-1 bg-green-700 rounded"
+                    onClick={() => {
+                      if (isExpired || hasVoted) return;
+                      setIsTooltipVisible(false);
+                      setSelectedOption(option);
+                    }}
+                  >
+                    Confirm
+                  </button>
+                  <button
+                    className="px-2 py-1 bg-red-700 rounded"
+                    onClick={() => {
+                      setSelectedOption(null);
+                      setIsTooltipVisible(false);
+                    }}
+                  >
+                    Discard
+                  </button>
+                </div>
+              </div>
+            ) : null}
+            <li
+              key={option._key}
+              className="p-4 flex flex-col gap-4 "
+              onClick={() => {
+                if (isExpired || hasVoted) return;
+                setIsTooltipVisible(true);
+                setSelectedOption(option);
+              }}
+            >
+              <div className="flex justify-between">
+                <div className="flex gap-2">
+                  <input
+                    type="radio"
+                    className={`${isExpired ? "hover:cursor-not-allowed" : ""}`}
+                    checked={
+                      alreadyVotedOption
+                        ? alreadyVotedOption === option.option
+                        : selectedOption === option
+                    }
+                    disabled={isExpired}
+                    onChange={() => {}}
+                    value={option.option}
+                  />
+                  {option.option}
+                </div>
+                <span>{voteCounts[option.option]}</span>
+              </div>
+              <div className="w-full relative h-[6px] rounded-md bg-neutral-600">
+                <div
+                  style={{
+                    width: `${(option.votes / (totalVotes || 0)) * 100}%`,
+                  }}
+                  className="h-[6px] rounded-md bg-indigo-700 absolute inset-0"
+                ></div>
+              </div>
+            </li>
+          </div>
         ))}
       </ul>
     </>
