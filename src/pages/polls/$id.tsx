@@ -35,7 +35,7 @@ const PollItemPage = () => {
   const isExpired = new Date(pollItem?.djSetDate as string) < new Date();
 
   return (
-    <Layout>
+    <Layout className="pb-8">
       <div className="bg-neutral-700 rounded-md shadow-md p-4 w-full max-w-xl">
         <span className="inline-block pb-4 text-lg">
           {dateFormatter(new Date(pollItem?.djSetDate))} Poll
@@ -46,7 +46,7 @@ const PollItemPage = () => {
           id={id}
         />
         {isExpired ? (
-          <div className="italic text-sm mb-2">This poll has expired</div>
+          <div className="italic text-sm pb-2">This poll has expired</div>
         ) : null}
       </div>
     </Layout>
