@@ -25,13 +25,19 @@ export default function Home() {
     fetchPollOptions();
   }, [fetchPollOptions]);
 
-  const previousEvents = pollItems?.filter(
-    (item) => new Date(item?.djSetDate) < new Date()
-  );
+  const previousEvents = pollItems
+    ?.filter((item) => new Date(item?.djSetDate) < new Date())
+    .sort(
+      (a, b) =>
+        new Date(b.djSetDate).getTime() - new Date(a.djSetDate).getTime()
+    );
 
-  const futureEvents = pollItems?.filter(
-    (item) => new Date(item?.djSetDate) > new Date()
-  );
+  const futureEvents = pollItems
+    ?.filter((item) => new Date(item?.djSetDate) > new Date())
+    .sort(
+      (a, b) =>
+        new Date(b.djSetDate).getTime() - new Date(a.djSetDate).getTime()
+    );
 
   return (
     <Layout>

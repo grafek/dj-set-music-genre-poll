@@ -110,8 +110,9 @@ const OptionsList = ({ options, isExpired, id }: OptionsListProps) => {
           patch: {
             id,
             set: {
-              [`pollOptions.options[${optionIndex}].votes`]:
-                Number(selectedOption?.votes) + 1,
+              [`pollOptions.options[${optionIndex}].votes`]: Number(
+                selectedOption?.votes
+              ),
             },
           },
         },
@@ -137,10 +138,12 @@ const OptionsList = ({ options, isExpired, id }: OptionsListProps) => {
         };
       });
 
-      localStorage.setItem(`${id}-has-voted`, "true");
-      localStorage.setItem(`${id}-option`, selectedOption?.option);
+      setSelectedOption({ ...selectedOption, votes: ++selectedOption.votes });
       setHasVoted(true);
       setAlreadyVotedOption(selectedOption.option);
+
+      localStorage.setItem(`${id}-has-voted`, "true");
+      localStorage.setItem(`${id}-option`, selectedOption?.option);
 
       toast.success(`Voted for ${selectedOption.option}`);
 
@@ -150,10 +153,14 @@ const OptionsList = ({ options, isExpired, id }: OptionsListProps) => {
           setVoteCounts((prevVoteCounts) => {
             return {
               ...prevVoteCounts,
-              [selectedOption.option]:
-                prevVoteCounts[selectedOption.option] - 1,
+              [selectedOption.option]: --prevVoteCounts[selectedOption.option],
             };
           });
+          setSelectedOption((prevOption) => {
+            if (prevOption) return { ...prevOption, votes: --prevOption.votes };
+          });
+          setHasVoted(false);
+          localStorage.removeItem(`${id}-option`);
         }
       });
     }
@@ -172,6 +179,7 @@ const OptionsList = ({ options, isExpired, id }: OptionsListProps) => {
             className={`border relative border-neutral-600 rounded-md cursor-pointer ${
               isExpired || hasVoted ? "hover:cursor-not-allowed" : ""
             }`}
+            key={option._key}
           >
             {selectedOption === option && isTooltipVisisble ? (
               <div
@@ -190,7 +198,6 @@ const OptionsList = ({ options, isExpired, id }: OptionsListProps) => {
                     onClick={() => {
                       if (isExpired || hasVoted) return;
                       setIsTooltipVisible(false);
-                      setSelectedOption(option);
                     }}
                   >
                     Confirm
@@ -237,7 +244,7 @@ const OptionsList = ({ options, isExpired, id }: OptionsListProps) => {
               <div className="w-full relative h-[6px] rounded-md bg-neutral-600">
                 <div
                   style={{
-                    width: `${(option.votes / (totalVotes || 0)) * 100}%`,
+                    width: `${(option.votes / totalVotes || 0) * 100}%`,
                   }}
                   className="h-[6px] rounded-md bg-indigo-700 absolute inset-0"
                 ></div>
