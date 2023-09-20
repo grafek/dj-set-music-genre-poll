@@ -15,3 +15,25 @@ export type PollOption = {
   votes: number;
   _key: string;
 };
+
+export type TransitionStyle = {
+  entering: {
+    [transitionState: string]: number;
+  };
+  entered: {
+    [transitionState: string]: number;
+  };
+  exiting: {
+    [transitionState: string]: number;
+  };
+  exited: {
+    [transitionState: string]: number;
+  };
+  unmounted?: {
+    [transitionState: string]: number;
+  };
+};
+
+export type DefaultStyle = {
+  [prop: string]: string | number;
+};
