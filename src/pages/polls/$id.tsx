@@ -5,13 +5,16 @@ import { useState, useCallback, useEffect } from "react";
 import sanityClient from "../../sanityClient";
 import { dateFormatter } from "../../helpers";
 import PollOptionList from "../../components/PollOptionList";
+import { TextSkeleton } from "../../components/Skeletons";
 
 const PollItemPage = () => {
   const { id } = useParams();
   const [pollItem, setPollItem] = useState<PollItem | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(false);
 
   const fetchPollOptions = useCallback(async () => {
     try {
+      setIsLoading(true);
       const data = await sanityClient.fetch(
         `*[_type == 'poll' && _id == $id][0]{ pollOptions, djSetDate, _id }`,
         { id }
@@ -20,12 +23,28 @@ const PollItemPage = () => {
       setPollItem(data);
     } catch (e) {
       console.error(e);
+    } finally {
+      setIsLoading(false);
     }
   }, [id]);
 
   useEffect(() => {
     fetchPollOptions();
   }, [fetchPollOptions]);
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="mr-96 mt-5">
+          <TextSkeleton />
+        </div>
+        <TextSkeleton height={4.5} width={34} />
+        <TextSkeleton height={4.5} width={34} />
+        <TextSkeleton height={4.5} width={34} />
+        <TextSkeleton height={4.5} width={34} />
+      </Layout>
+    );
+  }
 
   if (!pollItem?.pollOptions.options) {
     return "No poll yet for selected date";
@@ -34,8 +53,12 @@ const PollItemPage = () => {
   const isExpired = new Date(pollItem?.djSetDate as string) < new Date();
 
   return (
-    <Layout className="pb-8">
-      <div className="bg-primary-600 rounded-md border border-primary-400 shadow-2xl p-4 w-full max-w-xl">
+    <Layout className="pb-4 relative">
+      <div className="pt-8"/>
+      <a href="/" className="absolute px-3 top-5 flex-1 py-1 border border-primary-200 block rounded transition-colors duration-200 hover:bg-primary-400">
+        Home
+      </a>
+      <div className="bg-primary-600 relative rounded-md border border-primary-400 shadow-2xl p-4 w-full max-w-xl">
         <h1 className="inline-block pb-4 text-lg">
           {dateFormatter(new Date(pollItem?.djSetDate))} Poll
         </h1>
@@ -45,7 +68,9 @@ const PollItemPage = () => {
           id={id}
         />
         {isExpired ? (
-          <div className="italic text-sm pb-2">This poll has expired</div>
+          <div className="italic text-sm pt-2 text-gray-400">
+            This poll has expired
+          </div>
         ) : null}
       </div>
     </Layout>
