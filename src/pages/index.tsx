@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import sanityClient from "../sanityClient";
 import type { PollItem } from "../types";
 import Layout from "../Layout";
-import { dateFormatter } from "../helpers";
+import Poll from "../components/Poll";
+import { TextSkeleton } from "../components/Skeletons";
 
 const query = `*[_type == "poll"]{
   djSetDate,
@@ -11,13 +12,17 @@ const query = `*[_type == "poll"]{
 
 export default function Home() {
   const [pollItems, setPollItems] = useState<PollItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const fetchPollOptions = useCallback(async () => {
     try {
+      setIsLoading(true);
       const data = await sanityClient.fetch(query);
       setPollItems(data);
     } catch (error) {
       console.error(error);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -25,40 +30,69 @@ export default function Home() {
     fetchPollOptions();
   }, [fetchPollOptions]);
 
-  const previousEvents = pollItems
-    ?.filter((item) => new Date(item?.djSetDate) < new Date())
-    .sort(
-      (a, b) =>
-        new Date(b.djSetDate).getTime() - new Date(a.djSetDate).getTime()
-    );
+  const previousEvents = useMemo(
+    () =>
+      pollItems
+        ?.filter((item) => new Date(item?.djSetDate) < new Date())
+        .sort(
+          (a, b) =>
+            new Date(b.djSetDate).getTime() - new Date(a.djSetDate).getTime()
+        ),
+    [pollItems]
+  );
 
-  const futureEvents = pollItems
-    ?.filter((item) => new Date(item?.djSetDate) > new Date())
-    .sort(
-      (a, b) =>
-        new Date(b.djSetDate).getTime() - new Date(a.djSetDate).getTime()
+  const futureEvents = useMemo(
+    () =>
+      pollItems
+        ?.filter((item) => new Date(item?.djSetDate) > new Date())
+        .sort(
+          (a, b) =>
+            new Date(b.djSetDate).getTime() - new Date(a.djSetDate).getTime()
+        ),
+    [pollItems]
+  );
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <TextSkeleton width={5} />
+        <TextSkeleton height={2} />
+        <TextSkeleton width={5} />
+        <div className="flex flex-col gap-4">
+          <TextSkeleton height={2} />
+          <TextSkeleton height={2} />
+          <TextSkeleton height={2} />
+          <TextSkeleton height={2} />
+        </div>
+      </Layout>
     );
+  }
 
   return (
     <Layout>
+      <header>
+        <h1 className="text-3xl text-center pt-2 pb-12">Music genre poll</h1>
+      </header>
       <div className="text-center">
         <h2 className="text-xl font-medium">
           {futureEvents.length > 1 ? "Next polls" : "Next poll"}
         </h2>
-        {futureEvents.map((item, i) => (
-          <a href={`/polls/${item._id}`} key={i}>
-            {dateFormatter(new Date(item?.djSetDate))}
-          </a>
+        <div className="py-2" />
+        {futureEvents.map(({ _id, djSetDate }) => (
+          <Poll djSetDate={djSetDate} id={_id} key={_id} />
         ))}
       </div>
       <div className="text-center">
         <h2 className="text-xl font-medium">Previous polls</h2>
-        <ul className="italic">
-          {previousEvents.map((item, i) => (
-            <li key={i}>
-              <a href={`/polls/${item._id}`}>
-                {dateFormatter(new Date(item?.djSetDate))}
-              </a>
+        <div className="py-2" />
+        <ul className="italic flex flex-col gap-4">
+          {previousEvents.map(({ _id, djSetDate }) => (
+            <li key={_id}>
+              <Poll
+                djSetDate={djSetDate}
+                id={_id}
+                className="bg-gray-800/30 text-gray-400"
+              />
             </li>
           ))}
         </ul>
