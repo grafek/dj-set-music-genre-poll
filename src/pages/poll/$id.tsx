@@ -35,13 +35,17 @@ const PollItemPage = () => {
   if (isLoading) {
     return (
       <Layout>
-        <div className="mr-96 mt-5">
-          <TextSkeleton />
+        <div className="max-w-xl w-full flex flex-col gap-4">
+          <div className="py-4 mx-auto">
+            <TextSkeleton width={4} />
+          </div>
+          <div className="flex flex-col gap-4 bg-primary-600 relative rounded-md border border-primary-400 shadow-2xl p-4">
+            <TextSkeleton height={4.5} className="w-full" />
+            <TextSkeleton height={4.5} className="w-full" />
+            <TextSkeleton height={4.5} className="w-full" />
+            <TextSkeleton height={4.5} className="w-full" />
+          </div>
         </div>
-        <TextSkeleton height={4.5} width={34} />
-        <TextSkeleton height={4.5} width={34} />
-        <TextSkeleton height={4.5} width={34} />
-        <TextSkeleton height={4.5} width={34} />
       </Layout>
     );
   }
@@ -54,8 +58,11 @@ const PollItemPage = () => {
 
   return (
     <Layout className="pb-4 relative">
-      <div className="pt-8"/>
-      <a href="/" className="absolute px-3 top-5 flex-1 py-1 border border-primary-200 block rounded transition-colors duration-200 hover:bg-primary-400">
+      <div className="pt-8" />
+      <a
+        href="/"
+        className="absolute px-3 top-5 flex-1 py-1 border border-primary-200 block rounded transition-colors duration-200 hover:bg-primary-400"
+      >
         Home
       </a>
       <div className="bg-primary-600 relative rounded-md border border-primary-400 shadow-2xl p-4 w-full max-w-xl">

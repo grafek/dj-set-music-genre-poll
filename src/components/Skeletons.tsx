@@ -1,10 +1,10 @@
-type Props = { width?: number; height?: number };
+type Props = { width?: number; height?: number; className?: string };
 
-export function TextSkeleton({ width = 10, height = 1.5 }: Props) {
+export function TextSkeleton({ width, height = 1.5, className = "" }: Props) {
   return (
     <div
       style={{ width: `${width}rem`, height: `${height}rem` }}
-      className="rounded-md animate-pulse bg-primary-300"
-    ></div>
+      className={`rounded-md animate-pulse bg-primary-300 ${className}`}
+    />
   );
 }

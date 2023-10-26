@@ -140,7 +140,9 @@ const PollOptionList = ({ options, isExpired, id }: PollOptionListProps) => {
         {options.map((option, i) => (
           <div
             className={`border relative border-primary-300 rounded-md cursor-pointer ${
-              isExpired || hasVoted ? "hover:cursor-not-allowed" : "hover:bg-primary-400 transition-colors"
+              isExpired || hasVoted
+                ? "hover:cursor-not-allowed"
+                : "hover:bg-primary-400 transition-colors"
             }`}
             key={option._key}
           >
@@ -213,7 +215,7 @@ const PollOptionList = ({ options, isExpired, id }: PollOptionListProps) => {
                   />
                   {option.option}
                 </div>
-                <span>{voteCounts[option.option]}</span>
+                <span>{voteCounts[option.option] ?? 0}</span>
               </div>
               <div className="w-full relative h-[6px] rounded-md bg-gray-800/80">
                 <div
